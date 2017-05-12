@@ -21,11 +21,17 @@ public class MainActivity extends Activity implements SensorEventListener {
     private GraphView xView, yView, zView;
 
     private SensorManager sensorMgr;
+
     private Sensor accelerometer;
     private Sensor tempmeter;
     private Sensor rotationmeter;
     private Sensor lightmeter;
     private Sensor gravitymeter;
+    private Sensor nearmeter;
+    private Sensor magnetmeter;
+    private Sensor pressuremeter;
+    private Sensor vectormeter;
+
 
     private final static long GRAPH_REFRESH_WAIT_MS = 20;
 
@@ -59,10 +65,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         rotationmeter = sensorMgr.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         lightmeter    = sensorMgr.getDefaultSensor(Sensor.TYPE_LIGHT);
         gravitymeter  = sensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        nearmeter     = sensorMgr.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        pressuremeter = sensorMgr.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        magnetmeter   = sensorMgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        vectormeter   = sensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
-
-
-        if (lightmeter == null) {
+        if (accelerometer == null ) {
             Toast.makeText(this, getString(R.string.toast_no_accel_error),
                     Toast.LENGTH_SHORT).show();
             finish();
@@ -76,7 +84,17 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume");
+        //List<Sensor> sensors = sensorMgr.getSensorList(Sensor.TYPE_LIGHT);
+
+        sensorMgr.registerListener(this, accelerometer,SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, nearmeter,    SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, lightmeter,   SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, magnetmeter, SensorManager.SENSOR_DELAY_FASTEST);
         sensorMgr.registerListener(this, gravitymeter, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, rotationmeter, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, tempmeter, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, pressuremeter, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorMgr.registerListener(this, vectormeter, SensorManager.SENSOR_DELAY_FASTEST);
         th = new GraphRefreshThread();
         th.start();
     }
@@ -92,10 +110,41 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        /* acceleto meter */
-        vx = alpha * vx + (1 - alpha) * event.values[0];
-        vy = alpha * vy + (1 - alpha) * event.values[1];
-        vz = alpha * vz + (1 - alpha) * event.values[2];
+        switch(event.sensor.getType()){
+
+            case Sensor.TYPE_PROXIMITY:
+                //v = alpha * vx + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_LIGHT:
+                vx = alpha * vy + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                vy = alpha * vx + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_GRAVITY:
+                //v = alpha * vz + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_ORIENTATION:
+                //v = alpha * vz + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_ROTATION_VECTOR:
+                vz = alpha * vz + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_PRESSURE:
+                //v = alpha * vz + (1-alpha)* event.values[0];
+                break;
+
+            case Sensor.TYPE_RELATIVE_HUMIDITY:
+                //v = alpha * vz + (1-alpha)* event.values[0];
+                break;
+        }
+
         rate = ((float) (event.timestamp - prevts)) / (1000 * 1000);
         prevts = event.timestamp;
     }
